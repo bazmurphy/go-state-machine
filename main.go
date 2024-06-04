@@ -13,9 +13,9 @@ const (
 	StateStopped
 )
 
-// The iota keyword provides a convenient way to assign incrementing values
+// the iota keyword provides a convenient way to assign incrementing values
 // to a set of related constants without explicitly specifying the values for each constant.
-// It starts at 0 and increments by 1 for each subsequent constant declaration within the same const block.
+// it starts at 0 and increments by 1 for each subsequent constant declaration within the same const block.
 
 // StateIdle     = 0
 // StateRunning  = 1
