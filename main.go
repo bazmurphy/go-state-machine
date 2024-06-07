@@ -2,8 +2,7 @@ package main
 
 import "log"
 
-// define the states of your state machine using an enum or constants
-
+// the states of the state machine using constants (or an enum)
 type State int
 
 const (
@@ -13,109 +12,118 @@ const (
 	StateStopped
 )
 
-// the iota keyword provides a convenient way to assign incrementing values
-// to a set of related constants without explicitly specifying the values for each constant.
-// it starts at 0 and increments by 1 for each subsequent constant declaration within the same const block.
-
-// StateIdle     = 0
-// StateRunning  = 1
-// StatePaused   = 2
-// StateStopped  = 3
-
-// ----------
-
-// define a struct that represents your state machine
-// it should include the current state and any other relevant data
-
+// a struct that represents the state machine
 type StateMachine struct {
-	currentState State
-	// add other fields as needed
+	State State
+	Value int
 }
 
-// ----------
-
-// implement methods on the state machine struct
-// to handle state transitions and perform actions based on the current state
-
-func (sm *StateMachine) Start() {
-	log.Println("Start() | BEFORE | sm.currentState:", sm.currentState)
-
-	switch sm.currentState {
-	case StateIdle:
-		sm.currentState = StateRunning
-		// perform actions for starting the state machine
-	case StateRunning:
-		// already running, do nothing
-	case StatePaused:
-		sm.currentState = StateRunning
-		// resume from the paused state
-	case StateStopped:
-		// cannot start from the stopped state
+func NewStateMachine() *StateMachine {
+	return &StateMachine{
+		State: StateIdle, // the state machine is initialised in the idle state
+		Value: 0,
 	}
+}
 
-	log.Println("Start() | AFTER | sm.currentState:", sm.currentState)
+// methods on the state machine struct that handle state transitions and perform actions based on the existing state
+func (sm *StateMachine) Start() {
+	log.Printf("START | before state | %s", printState(sm.State))
+	switch sm.State {
+	case StateIdle, StateStopped:
+		sm.State = StateRunning
+		sm.Value = 0 // reset the value, revert to initial state, to maintain a consistent starting point
+		log.Printf("state machine started | value initialized to: %d", sm.Value)
+	case StateRunning:
+		log.Printf("state machine is already running")
+	case StatePaused:
+		sm.State = StateRunning
+		log.Printf("state machine resumed from paused state | value: %d", sm.Value)
+	}
+	log.Printf("START | after state | %s", printState(sm.State))
+	log.Print("--------------------")
 }
 
 func (sm *StateMachine) Pause() {
-	log.Println("Pause() | BEFORE | sm.currentState:", sm.currentState)
-
-	switch sm.currentState {
+	log.Printf("PAUSE | before state | %s", printState(sm.State))
+	switch sm.State {
 	case StateIdle:
-		// cannot pause from the idle state
+		log.Printf("❌ cannot pause from the idle state")
 	case StateRunning:
-		sm.currentState = StatePaused
-		// perform actions for pausing the state machine
+		sm.State = StatePaused
+		log.Printf("state machine paused | value: %d", sm.Value)
 	case StatePaused:
-		// already paused, do nothing
+		log.Printf("state machine is already paused")
 	case StateStopped:
-		// cannot pause from the stopped state
+		log.Printf("❌ cannot pause from the stopped state")
 	}
-
-	log.Println("Pause() | AFTER | sm.currentState:", sm.currentState)
+	log.Printf("PAUSE | before state | %s", printState(sm.State))
+	log.Print("--------------------")
 }
 
 func (sm *StateMachine) Stop() {
-	log.Println("Stop()  | BEFORE | sm.currentState:", sm.currentState)
-
-	switch sm.currentState {
+	log.Printf("STOP | before state | %s", printState(sm.State))
+	switch sm.State {
 	case StateIdle:
-		// already stopped, do nothing
+		log.Printf("state machine is already stopped.")
 	case StateRunning, StatePaused:
-		sm.currentState = StateStopped
-		// perform actions for stopping the state machine
+		sm.State = StateStopped
+		log.Printf("state machine stopped | value: %d", sm.Value)
 	case StateStopped:
-		// already stopped, do nothing
+		log.Printf("state machine is already stopped")
 	}
-
-	log.Println("Stop()  | AFTER | sm.currentState:", sm.currentState)
+	log.Printf("STOP | after state | %s", printState(sm.State))
+	log.Print("--------------------")
 }
 
-// ----------
-
-// create an instance of the state machine
-// and use its methods to control the state transitions
+func (sm *StateMachine) ProcessValue() {
+	log.Printf("PROCESS VALUE | attempting...")
+	switch sm.State {
+	case StateRunning:
+		sm.Value++
+		log.Printf("processed value | new value: %d", sm.Value)
+	default:
+		log.Printf("❌ cannot process value in the %s state", printState(sm.State))
+	}
+	log.Print("--------------------")
+}
 
 func main() {
-	log.Println("Possible States:")
-	log.Println("Idle:", StateIdle)
-	log.Println("Running:", StateRunning)
-	log.Println("Paused:", StatePaused)
-	log.Println("Stopped:", StateStopped)
+	// create a new state machine using the constructor
+	sm := NewStateMachine()
 
-	sm := &StateMachine{currentState: StateIdle}
-
+	// start the state machine (from an idle state)
 	sm.Start()
-	// state machine is now running
 
+	// process value while the state machine is running
+	for i := 0; i < 3; i++ {
+		sm.ProcessValue()
+	}
+
+	// pause the state machine
 	sm.Pause()
-	// state machine is now paused
 
+	// cannot process the value while paused
+	sm.ProcessValue()
+
+	// restart the state machine from a paused state
 	sm.Start()
-	// state machine is running again
 
+	// process more values
+	for i := 0; i < 6; i++ {
+		sm.ProcessValue()
+	}
+
+	// stop the state machine
 	sm.Stop()
-	// state machine is now stopped
 
+	// cannot process value while stopped
+	sm.ProcessValue()
+
+	// restart the state machine from a stopped state
 	sm.Start()
-	// but cannot start from the stopped state
+
+	// process more values
+	for i := 0; i < 3; i++ {
+		sm.ProcessValue()
+	}
 }
